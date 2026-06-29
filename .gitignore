@@ -1,0 +1,7 @@
+# NEVER commit the plaintext data — it contains real doctors' PII.
+# Only the encrypted data.enc.js is published.
+assets/data.js
+.passphrase
+*.local
+.DS_Store
+node_modules/
