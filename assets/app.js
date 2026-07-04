@@ -28,6 +28,7 @@ window.startApp = function(){
 
   const doctors = C.filter(c=>c.type==='doctor');
   const nurses  = C.filter(c=>c.type==='nurse');
+  const hmo     = C.filter(c=>c.type==='hmo');
   const countStage = s => C.filter(c=>c.stage===s).length;
   const active = countStage('active'), onboarded = countStage('onboarded'), engaged = countStage('engaged');
 
@@ -71,7 +72,7 @@ window.startApp = function(){
   function pOverview(){
     const f=D.goal.funnel, fx=D.meta.fxNairaPerUsd;
     const cards = [
-      stat('bg-blue', ci(C.length), 'Contacts in network', `${doctors.length} doctors · ${nurses.length} nurses (bonus)`),
+      stat('bg-blue', ci(C.length), 'Contacts in network', `${doctors.length} doctors · ${nurses.length} nurses · ${hmo.length} HMO/admin`),
       stat('bg-amber', ci(engaged), 'Engaged & warming', 'spoken to, interested'),
       stat('bg-green', ci(onboarded), 'Onboarded', 'KYC + pitch done'),
       stat('bg-ink', ci(active)+' <small>/ 300</small>', 'Active referrers', 'next milestone: the 1st inquiry')
@@ -103,12 +104,12 @@ window.startApp = function(){
 
   function pNetwork(){
     const qualifiable = doctors.length;
-    view.innerHTML = phead('Strength of Network', 'The network Diana is building', 'Only doctors count toward the 300 — nurses are a bonus channel.')
+    view.innerHTML = phead('Strength of Network', 'The network Diana is building', 'Only doctors count toward the 300 — nurses and HMO/admin contacts are strategic bonus channels.')
     + `<div class="grid g4">
-        ${stat('bg-blue', ci(C.length), 'Total contacts')}
+        ${stat('bg-blue', ci(C.length), 'Total contacts', `${tally('city').length} cities`)}
         ${stat('bg-green', ci(doctors.length), 'Doctors', 'count toward the goal')}
         ${stat('bg-amber', ci(nurses.length), 'Nurses / midwives', 'bonus channel')}
-        ${stat('bg-ink', ci(tally('city').length), 'Cities reached')}
+        ${stat('bg-ink', ci(hmo.length), 'HMO / admin', 'gatekeepers & approvers')}
        </div>
        <div class="grid g2" style="margin-top:18px">
          <div class="card pad-lg"><h3>By stage</h3><div style="margin-top:14px">${barlist(STAGES.filter(s=>countStage(s)).map(s=>[STAGE_LABEL[s],countStage(s)]),'var(--blue)')}</div></div>
@@ -153,7 +154,18 @@ window.startApp = function(){
        <div class="card pad-lg" style="margin-top:18px"><h3>Commission model (per patient)</h3>
          <table class="tbl" style="margin-top:10px"><thead><tr><th>Destination</th><th>Avg bill</th><th>Total comm.</th><th>Diana keeps</th><th>Doctor earns</th></tr></thead><tbody>${comRows}</tbody></table>
          <p class="muted" style="margin-top:12px">Year 1 (100 patients · 20 Dubai + 80 India): <b class="t-green">Diana ≈ ${usd(D.finance.projection.year1Usd)} (≈ ${nairaShort(D.finance.projection.year1Naira)})</b> · doctors ≈ $123,000. Year 2 at +20%: ≈ ${usd(D.finance.projection.year2Usd)}.</p>
-       </div>`;
+       </div>`
+    + (D.finance.patientsInProgress && D.finance.patientsInProgress.length ? `<div class="card pad-lg" style="margin-top:18px"><h3>Patients in progress</h3>
+         <table class="tbl" style="margin-top:10px"><thead><tr><th>Patient</th><th>Stage</th><th>Note</th></tr></thead><tbody>${
+           D.finance.patientsInProgress.map(p=>`<tr><td class="nm">${p.label}</td><td><span class="badge b-soon">${p.stage}</span></td><td class="t-mute">${p.note||''}</td></tr>`).join('')
+         }</tbody></table>
+         <div class="callout green" style="margin-top:14px">⭐ First patient inquiry — the funnel's first real conversion. Turning this into a completed, paid case is the milestone that makes a doctor "active".</div>
+       </div>` : '')
+    + (D.finance.fieldVisits && D.finance.fieldVisits.length ? `<div class="card pad-lg" style="margin-top:18px"><h3>Field visits</h3>
+         <table class="tbl" style="margin-top:10px"><thead><tr><th>Date</th><th>Place</th><th>Outcome</th><th>Transport</th></tr></thead><tbody>${
+           D.finance.fieldVisits.map(v=>`<tr><td>${v.date}</td><td class="nm">${v.place}</td><td class="t-mute">${v.outcome||''}</td><td>${v.naira!=null?naira(v.naira)+' <span class="badge b-soon">'+cap(v.expenseStatus||'')+'</span>':'<span class="t-mute">not logged</span>'}</td></tr>`).join('')
+         }</tbody></table>
+       </div>` : '');
   }
 
   function pTasks(){
